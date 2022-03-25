@@ -64,6 +64,10 @@
 #include <moveit_servo/status_codes.h>
 #include <moveit_servo/low_pass_filter.h>
 
+//dynamic reconfigure param
+#include <dynamic_reconfigure/server.h>
+#include <moveit_servo/ServoDynamicParameterConfig.h>
+
 namespace moveit_servo
 {
 class ServoCalcs
@@ -148,7 +152,7 @@ private:
   void enforceVelLimits(Eigen::ArrayXd& delta_theta);
 
   /** \brief Avoid overshooting joint limits */
-  bool enforcePositionLimits();
+  bool enforcePositionLimits(sensor_msgs::JointState& joint_state);
 
   /** \brief Possibly calculate a velocity scaling factor, due to proximity of
    * singularity and direction of motion
@@ -317,5 +321,11 @@ private:
   // input condition variable used for low latency mode
   std::condition_variable input_cv_;
   bool new_input_cmd_ = false;
+
+  void dynConfCallback(moveit_servo::ServoDynamicParameterConfig &config, uint32_t level);
+  //ServoNodeDynConfServerPtr
+
+  std::shared_ptr<dynamic_reconfigure::Server<moveit_servo::ServoDynamicParameterConfig>> dynconf_server_;
+
 };
 }  // namespace moveit_servo

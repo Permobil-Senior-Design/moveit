@@ -1,17 +1,7 @@
 cmake_minimum_required(VERSION 3.1.3)
 project(moveit_servo)
 
-if(NOT "${CMAKE_CXX_STANDARD}")
-  set(CMAKE_CXX_STANDARD 14)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 set(SERVO_LIB_NAME moveit_servo_cpp_api)
-
-if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
 
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -27,6 +17,12 @@ find_package(catkin REQUIRED COMPONENTS
   std_srvs
   tf2_eigen
   trajectory_msgs
+  dynamic_reconfigure
+)
+moveit_build_options()
+
+generate_dynamic_reconfigure_options(
+  config/servo_dynamic_reconfig.cfg
 )
 
 catkin_package(
@@ -51,8 +47,8 @@ catkin_package(
     EIGEN3
 )
 
-include_directories(
-  include
+include_directories(include)
+include_directories(SYSTEM
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
@@ -134,6 +130,9 @@ add_executable(spacenav_to_twist
 )
 add_dependencies(spacenav_to_twist ${catkin_EXPORTED_TARGETS})
 target_link_libraries(spacenav_to_twist ${catkin_LIBRARIES})
+
+add_executable(servo_dynamic_param_server src/servo_dynamic_param_server.cpp)
+target_link_libraries(servo_dynamic_param_server ${catkin_LIBRARIES})
 
 ##################
 ## INSTALLATION ##
