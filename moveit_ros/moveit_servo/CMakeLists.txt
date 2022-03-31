@@ -19,7 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
   trajectory_msgs
   dynamic_reconfigure
 )
-moveit_build_options()
 
 generate_dynamic_reconfigure_options(
   config/servo_dynamic_reconfig.cfg
@@ -130,9 +129,6 @@ add_executable(spacenav_to_twist
 )
 add_dependencies(spacenav_to_twist ${catkin_EXPORTED_TARGETS})
 target_link_libraries(spacenav_to_twist ${catkin_LIBRARIES})
-
-add_executable(servo_dynamic_param_server src/servo_dynamic_param_server.cpp)
-target_link_libraries(servo_dynamic_param_server ${catkin_LIBRARIES})
 
 ##################
 ## INSTALLATION ##
