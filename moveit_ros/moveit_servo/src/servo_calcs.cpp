@@ -159,11 +159,10 @@ ServoCalcs::ServoCalcs(ros::NodeHandle& nh, ServoParameters& parameters,
 
 void ServoCalcs::dynConfCallback(moveit_servo::ServoDynamicParameterConfig &config, uint32_t /*level*/)
 {
-  ROS_INFO("Reconfigure Request: %d", config.linear);
-
   parameters_.linear_scale = config.linear;
-  ROS_INFO("linear_scale is  : %d", parameters_.linear_scale);
-
+  parameters_.rotational_scale = config.rotational;
+  parameters_.joint_scale = config.joint;
+  parameters_.planning_frame = config.planning_frame;
 }
 
 ServoCalcs::~ServoCalcs()
