@@ -162,10 +162,6 @@ bool PointCloudOctomapUpdater::getShapeTransform(ShapeHandle h, Eigen::Isometry3
   return it != transform_cache_.end();
 }
 
-void PointCloudOctomapUpdater::updateMask(const sensor_msgs::PointCloud2& cloud, const Eigen::Vector3d& sensor_origin,
-                                          std::vector<int>& mask)
-{
-}
 
 void PointCloudOctomapUpdater::cloudMsgCallback(const sensor_msgs::PointCloud2::ConstPtr& cloud_msg)
 {
@@ -217,7 +213,6 @@ void PointCloudOctomapUpdater::cloudMsgCallback(const sensor_msgs::PointCloud2::
 
   /* mask out points on the robot */
   shape_mask_->maskContainment(*cloud_msg, sensor_origin_eigen, 0.0, max_range_, mask_);
-  updateMask(*cloud_msg, sensor_origin_eigen, mask_);
 
   octomap::KeySet free_cells, occupied_cells, model_cells, clip_cells;
   std::unique_ptr<sensor_msgs::PointCloud2> filtered_cloud;
@@ -304,9 +299,27 @@ void PointCloudOctomapUpdater::cloudMsgCallback(const sensor_msgs::PointCloud2::
         free_cells.insert(key_ray_.begin(), key_ray_.end());
 
     /* compute the free cells along each ray that ends at a clipped cell */
-    for (octomap::KeySet::iterator it = clip_cells.begin(), end = clip_cells.end(); it != end; ++it)
-      if (tree_->computeRayKeys(sensor_origin, tree_->keyToCoord(*it), key_ray_))
+    /* Changed to only insert free cells up to the clipping distance, to not fill with useless points, with a bit of a radius as well"*/
+    for (octomap::KeySet::iterator it = clip_cells.begin(), end = clip_cells.end(); it != end; ++it){
+      octomap::point3d clipcoord =tree_->keyToCoord(*it);
+      octomap::point3d diff=clipcoord-sensor_origin;
+      clipcoord = sensor_origin+diff*(max_range_/sensor_origin.distance(clipcoord));
+
+      if (tree_->computeRayKeys(sensor_origin, octomap::point3d(0,0,.01)+clipcoord, key_ray_))
         free_cells.insert(key_ray_.begin(), key_ray_.end());
+      if (tree_->computeRayKeys(sensor_origin, octomap::point3d(0,0,-.01)+clipcoord, key_ray_))
+        free_cells.insert(key_ray_.begin(), key_ray_.end());
+      if (tree_->computeRayKeys(sensor_origin, octomap::point3d(0,.01,0)+clipcoord, key_ray_))
+        free_cells.insert(key_ray_.begin(), key_ray_.end());
+      if (tree_->computeRayKeys(sensor_origin, octomap::point3d(0,-.01,0)+clipcoord, key_ray_))
+        free_cells.insert(key_ray_.begin(), key_ray_.end());
+      if (tree_->computeRayKeys(sensor_origin, octomap::point3d(.01,0,0)+clipcoord, key_ray_))
+        free_cells.insert(key_ray_.begin(), key_ray_.end());
+      if (tree_->computeRayKeys(sensor_origin, octomap::point3d(-.01,0,0)+clipcoord, key_ray_))
+        free_cells.insert(key_ray_.begin(), key_ray_.end());
+      
+
+    }
   }
   catch (...)
   {
